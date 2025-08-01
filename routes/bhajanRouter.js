@@ -29,7 +29,7 @@ router.get("/", async (req, res) => {
         { houseName: regex }
       ]
     })
-      .sort({ nameHindi: 1 }) // Newest first
+      .sort({ date: -1 }) // Newest first
       .skip(skip)
       .limit(limit);
 
