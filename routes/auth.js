@@ -1,24 +1,58 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const bcrypt = require('bcrypt');
-const User = require('../models/user');
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const User = require("../models/user");
 
-// POST /api/login
-router.post('/login', async (req, res) => {
-  const { username, password } = req.body;
+const SECRET_KEY = "codingbhooth1225"; // ya process.env.JWT_SECRET
+
+
+// POST /api/register
+router.post("/register", async (req, res) => {
+  const { email, password } = req.body;
 
   try {
-    const user = await User.findOne({ username });
-    if (!user) return res.status(401).json({ message: 'Invalid credentials' });
+    const existingUser = await User.findOne({ email });
+    if (existingUser)
+      return res.status(400).json({ message: "User already exists" });
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ message: 'Invalid credentials' });
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new User({
+      email,
+      password: hashedPassword,
+    });
 
-    res.json({ success: true, message: 'Login successful' });
+    await newUser.save();
+
+    res.status(201).json({ message: "User registered successfully ✅" });
   } catch (err) {
-    console.error('❌ Login error:', err);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: "Server error" });
   }
 });
+
+// POST /api/login
+router.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user)
+      return res.status(401).json({ message: "Invalid email or password ❌" });
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch)
+      return res.status(401).json({ message: "Invalid email or password ❌" });
+
+    const token = jwt.sign({ userId: user._id, email: user.email }, SECRET_KEY, {
+      expiresIn: "1d", // ⏳ token 1 hour valid
+    });
+
+    res.status(200).json({ token, message: "Login successful ✅" });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
 
 module.exports = router;
