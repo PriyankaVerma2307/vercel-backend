@@ -5,7 +5,7 @@ require('dotenv').config();
 const User = require('./models/user');
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(process.env.MONGO_URI)
   .then(async () => {
     const username = 'msg';                         // 👤 Set your username here
     const plainPassword = 'msg1234';           // 🔑 Your plain password
